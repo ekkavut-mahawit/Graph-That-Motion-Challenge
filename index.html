@@ -131,7 +131,7 @@
 <body>
 
     <div class="header-section">
-        <!-- ส่วนแสดงโลโก้ (สามารถเปลี่ยน src="https://ekkavut-mahawit.github.io/freefall/logo.png" เป็นลิงก์รูปภาพของโรงเรียนได้ครับ) -->
+        <!-- ส่วนแสดงโลโก้ (สามารถเปลี่ยน src="logo.png" เป็นลิงก์รูปภาพของโรงเรียนได้ครับ) -->
         <div class="logo-container">
             <img src="logo.png" alt="School/Physics Logo" onerror="this.style.display='none'; document.getElementById('fallbackLogo').style.display='flex';">
             <div id="fallbackLogo" class="logo-fallback">PHYSICS</div>
@@ -542,7 +542,7 @@
             feedback.innerHTML = "จบเกม! กำลังส่งข้อมูลคะแนนของคุณ กรุณารอสักครู่...";
             feedback.style.display = 'block';
 
-            const WEB_APP_URL = "ใส่_URL_WEB_APP_ที่นี่";
+            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAjQzdGoBXTNTbjJ1a2kc5kCT2aIrtCWDBOCkQBoUTXm682vG87nWdueNDpYsHC3ol/exec";
 
             let formData = new URLSearchParams();
             formData.append('name', document.getElementById('studentName').value);
