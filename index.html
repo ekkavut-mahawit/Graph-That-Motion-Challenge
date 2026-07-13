@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph That Motion Challenge (Full Vectors with Logo)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        /* ส่วนหัวและโลโก้ */
+        .header-section {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            margin-bottom: 5px;
+        }
+        .logo-container {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90px;
+        }
+        .logo-container img {
+            max-height: 90px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+        /* โลโก้สำรองกรณีไม่มีไฟล์ภาพ */
+        .logo-fallback {
+            display: none;
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            border: 3px solid #ffffff;
+        }
+        
+        h1 { color: #0f172a; margin: 0 0 5px 0; font-size: 1.8rem; }
+        .teacher-name { font-size: 1.1rem; color: #2563eb; font-weight: 600; margin-bottom: 10px; }
+        .description { color: #475569; margin-bottom: 20px; text-align: center; max-width: 800px; font-size: 0.95rem; line-height: 1.6; }
+        
+        .student-info-box {
+            display: flex; gap: 15px; background: #ffffff; padding: 15px 25px; border-radius: 12px;
+            margin-bottom: 20px; width: 100%; max-width: 1250px; box-sizing: border-box;
+            border: 2px solid #cbd5e1; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .input-group { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px; }
+        .input-group label { font-weight: bold; color: #334155; white-space: nowrap; font-size: 0.95rem; }
+        .input-group input {
+            width: 100%; padding: 10px 14px; border: 2px solid #94a3b8; border-radius: 8px;
+            font-size: 0.95rem; outline: none; transition: all 0.2s ease;
+        }
+        .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .input-group input:disabled { background-color: #f1f5f9; color: #94a3b8; }
+        
+        .container {
+            display: flex; flex-wrap: wrap; gap: 35px; justify-content: center; background: white;
+            padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            max-width: 1250px; width: 100%; box-sizing: border-box;
+        }
+        
+        .canvas-container { display: flex; flex-direction: column; align-items: center; width: 500px; }
+        canvas#mainCanvas {
+            border: 2px solid #94a3b8; border-radius: 12px; background-color: #f1f5f9;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .animation-controls { margin-top: 15px; display: flex; gap: 10px; width: 100%; }
+        .play-btn { 
+            flex: 1; background-color: #3b82f6; color: white; border: none; padding: 12px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;
+        }
+        .play-btn:hover { background-color: #2563eb; }
+        .play-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+        .reward-zone { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+        .stars-container { display: flex; gap: 10px; }
+        .star-item { font-size: 2.8rem; color: #eab308; opacity: 0.15; transition: all 0.4s ease; }
+        .star-item.active { opacity: 1; transform: scale(1.15); text-shadow: 0 0 15px rgba(234, 179, 8, 0.6); }
+
+        .control-panel { flex: 1; min-width: 450px; display: flex; flex-direction: column; justify-content: space-between; }
+        .instruction-box {
+            background-color: #fffbeb; padding: 15px; border-radius: 10px; font-size: 1.1rem;
+            font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px dashed #f59e0b; color: #b45309;
+        }
+
+        .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .option-card {
+            background: #ffffff; border: 2px solid #cbd5e1; border-radius: 12px; padding: 8px; 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: all 0.2s;
+        }
+        .option-card:hover:not(:disabled) { border-color: #475569; background-color: #f8fafc; transform: scale(1.02); }
+        .option-card:disabled { cursor: not-allowed; }
+        .option-card.locked { opacity: 0.6; background-color: #f1f5f9; }
+        .option-card.correct { background-color: #d1fae5 !important; border-color: #10b981 !important; opacity: 1 !important; }
+        .option-card.wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; opacity: 1 !important; }
+        .option-label { font-size: 0.9rem; font-weight: bold; margin-top: 6px; color: #334155; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .action-btn { flex: 1; padding: 14px; background-color: #0f172a; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; font-size: 1rem; }
+        .action-btn:hover:not(:disabled) { background-color: #1e293b; }
+        
+        .feedback { padding: 15px; border-radius: 8px; font-size: 1rem; line-height: 1.5; margin-bottom: 15px; display: none; }
+        .feedback-header { font-weight: bold; font-size: 1.1rem; margin-bottom: 8px; }
+        .explanation-box { background-color: rgba(255,255,255,0.6); padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid rgba(0,0,0,0.1); }
+        .success { background-color: #d1fae5; color: #064e3b; border: 1px solid #34d399; }
+        .error { background-color: #fee2e2; color: #7f1d1d; border: 1px solid #f87171; }
+        .system-msg { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: bold; text-align: center; }
+
+        .score-board { font-size: 1rem; font-weight: bold; text-align: center; margin-top: 15px; background: #e2e8f0; padding: 10px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <!-- ส่วนแสดงโลโก้ (สามารถเปลี่ยน src="logo.png" เป็นลิงก์รูปภาพของโรงเรียนได้ครับ) -->
+        <div class="logo-container">
+            <img src="logo.png" alt="School/Physics Logo" onerror="this.style.display='none'; document.getElementById('fallbackLogo').style.display='flex';">
+            <div id="fallbackLogo" class="logo-fallback">PHYSICS</div>
+        </div>
+        <h1>Graph That Motion! (Full Vectors)</h1>
+        <div class="teacher-name">ผู้สอน: ชื่อครูผู้สอน</div>
+    </div>
+
+    <div class="description">
+        <b>ภารกิจ:</b> สังเกตการเคลื่อนที่ของรถและรอยจุดบนถนน จากนั้นอ่านคำสั่งว่าโจทย์ให้เลือกกราฟ <b>s-t, v-t, หรือ a-t</b> ให้ถูกต้อง
+    </div>
+
+    <div class="student-info-box">
+        <div class="input-group"><label>ชื่อ-นามสกุล:</label><input type="text" id="studentName" placeholder="กรอกชื่อ-นามสกุล..." oninput="validateStudentInfo()"></div>
+        <div class="input-group"><label>ชั้น / ห้อง:</label><input type="text" id="studentClass" placeholder="เช่น ม.4/1" oninput="validateStudentInfo()"></div>
+        <div class="input-group"><label>เลขที่:</label><input type="number" id="studentNo" min="1" placeholder="เลขที่..." oninput="validateStudentInfo()"></div>
+    </div>
+
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="500" height="250"></canvas>
+            <div class="animation-controls">
+                <button id="replayBtn" class="play-btn" onclick="startAnimation()" disabled>เล่นภาพเคลื่อนไหวซ้ำ</button>
+            </div>
+            
+            <div class="reward-zone">
+                <div class="stars-container" id="starsContainer">
+                    <span class="star-item">★</span><span class="star-item">★</span><span class="star-item">★</span><span class="star-item">★</span><span class="star-item">★</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div>
+                <div class="instruction-box" id="instructionBox">
+                    กรุณากรอกข้อมูล ชื่อ, ชั้น, และเลขที่ ด้านบนก่อนเพื่อปลดล็อกโจทย์และดูกราฟ
+                </div>
+                <div class="options-grid" id="optionsGrid">
+                    <button class="option-card locked" id="opt0" onclick="checkAnswer(0)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ A</div></button>
+                    <button class="option-card locked" id="opt1" onclick="checkAnswer(1)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ B</div></button>
+                    <button class="option-card locked" id="opt2" onclick="checkAnswer(2)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ C</div></button>
+                    <button class="option-card locked" id="opt3" onclick="checkAnswer(3)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ D</div></button>
+                    <button class="option-card locked" id="opt4" onclick="checkAnswer(4)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ E</div></button>
+                    <button class="option-card locked" id="opt5" onclick="checkAnswer(5)" disabled><canvas width="140" height="140"></canvas><div class="option-label">กราฟ F</div></button>
+                </div>
+            </div>
+
+            <div>
+                <div id="feedback" class="feedback"></div>
+                <div class="btn-group">
+                    <button id="nextBtn" class="action-btn" onclick="startNewQuestion()" style="display:none;">ข้อถัดไป ➔</button>
+                </div>
+                <div class="score-board">คะแนนของคุณ: <span id="score">0</span> / <span id="total">0</span> (สูงสุด 8 ครั้ง)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const maxAttempts = 8;
+        const targetScore = 5;
+        let score = 0, total = 0;
+        let hasAnswered = false, gameOver = false;
+        
+        let currentMotionType = 0;
+        let currentGraphMode = 's';
+        let choices = [];
+        
+        const mainCanvas = document.getElementById('mainCanvas');
+        const ctx = mainCanvas.getContext('2d');
+        let animFrame;
+        let frameCount = 0;
+        const totalFrames = 150;
+        let dots = [];
+
+        function isStudentInfoComplete() {
+            return document.getElementById('studentName').value.trim() !== "" && 
+                   document.getElementById('studentClass').value.trim() !== "" && 
+                   document.getElementById('studentNo').value.trim() !== "";
+        }
+
+        function validateStudentInfo() {
+            if (hasAnswered || gameOver) return; 
+            const isComplete = isStudentInfoComplete();
+            document.getElementById('replayBtn').disabled = !isComplete;
+            for (let i = 0; i < 6; i++) {
+                let card = document.getElementById(`opt${i}`);
+                card.disabled = !isComplete;
+                isComplete ? card.classList.remove('locked') : card.classList.add('locked');
+            }
+            if (isComplete && total === 0 && frameCount === 0) {
+                const instrBox = document.getElementById('instructionBox');
+                instrBox.style.backgroundColor = "#f1f5f9";
+                instrBox.style.borderColor = "#94a3b8";
+                instrBox.style.color = "#0f172a";
+                startNewQuestion();
+            }
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = '#94a3b8'; ctx.fillRect(0, 160, mainCanvas.width, 40);
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.setLineDash([15, 15]);
+            ctx.beginPath(); ctx.moveTo(0, 180); ctx.lineTo(mainCanvas.width, 180); ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = "bold 15px sans-serif";
+            ctx.fillStyle = '#ef4444'; 
+            ctx.fillText("◀ ทิศซ้าย (-)", 15, 225);
+            ctx.fillStyle = '#10b981'; 
+            ctx.fillText("ทิศขวา (+) ▶", mainCanvas.width - 110, 225);
+        }
+
+        function drawCar(x, y, motionType) {
+            ctx.fillStyle = '#dc2626'; ctx.fillRect(x - 20, y - 10, 40, 15);
+            ctx.fillStyle = '#f87171'; ctx.fillRect(x - 10, y - 20, 20, 10);
+            ctx.fillStyle = '#1e293b'; 
+            ctx.beginPath(); ctx.arc(x - 12, y + 5, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + 12, y + 5, 6, 0, Math.PI * 2); ctx.fill();
+
+            if (motionType !== undefined && motionType >= 0) {
+                let vRight = (motionType === 0 || motionType === 2 || motionType === 3);
+                let vLeft = (motionType === 1 || motionType === 4 || motionType === 5);
+                
+                let aRight = (motionType === 2 || motionType === 5);
+                let aLeft = (motionType === 3 || motionType === 4);
+                let aZero = (motionType === 0 || motionType === 1);
+                
+                ctx.font = "bold 14px sans-serif";
+                ctx.lineWidth = 3;
+
+                // วาดเวกเตอร์ v (ความเร็ว) ไว้ด้านบนรถ
+                if (vRight) {
+                    ctx.fillStyle = '#059669'; 
+                    ctx.fillText("v (+)", x - 12, y - 30);
+                    ctx.strokeStyle = '#059669';
+                    ctx.beginPath(); 
+                    ctx.moveTo(x + 25, y - 35); ctx.lineTo(x + 45, y - 35); ctx.lineTo(x + 38, y - 40); 
+                    ctx.moveTo(x + 45, y - 35); ctx.lineTo(x + 38, y - 30);
+                    ctx.stroke();
+                } else if (vLeft) {
+                    ctx.fillStyle = '#b91c1c'; 
+                    ctx.fillText("v (-)", x - 12, y - 30);
+                    ctx.strokeStyle = '#b91c1c';
+                    ctx.beginPath(); 
+                    ctx.moveTo(x - 25, y - 35); ctx.lineTo(x - 45, y - 35); ctx.lineTo(x - 38, y - 40); 
+                    ctx.moveTo(x - 45, y - 35); ctx.lineTo(x - 38, y - 30);
+                    ctx.stroke();
+                }
+
+                // วาดเวกเตอร์ a (ความเร่ง) ไว้ด้านใต้รถ
+                if (!aZero) {
+                    if (aRight) {
+                        ctx.fillStyle = '#7c3aed'; 
+                        ctx.fillText("a (+)", x - 12, y + 35);
+                        ctx.strokeStyle = '#7c3aed';
+                        ctx.beginPath(); 
+                        ctx.moveTo(x + 25, y + 30); ctx.lineTo(x + 45, y + 30); ctx.lineTo(x + 38, y + 25); 
+                        ctx.moveTo(x + 45, y + 30); ctx.lineTo(x + 38, y + 35);
+                        ctx.stroke();
+                    } else if (aLeft) {
+                        ctx.fillStyle = '#ea580c'; 
+                        ctx.fillText("a (-)", x - 12, y + 35);
+                        ctx.strokeStyle = '#ea580c';
+                        ctx.beginPath(); 
+                        ctx.moveTo(x - 25, y + 30); ctx.lineTo(x - 45, y + 30); ctx.lineTo(x - 38, y + 25); 
+                        ctx.moveTo(x - 45, y + 30); ctx.lineTo(x - 38, y + 35);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function getCarPosition(type, t) {
+            if (type === 0) return t;                  
+            if (type === 1) return 1 - t;              
+            if (type === 2) return t * t;              
+            if (type === 3) return 2 * t - t * t;      
+            if (type === 4) return 1 - (t * t);        
+            if (type === 5) return (1 - t) * (1 - t);  
+            return 0;
+        }
+
+        function startAnimation() {
+            if (animFrame) cancelAnimationFrame(animFrame);
+            frameCount = 0; dots = [];
+            document.getElementById('replayBtn').disabled = true;
+            animateLoop();
+        }
+
+        function animateLoop() {
+            ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+            drawBackground();
+            
+            let t = frameCount / totalFrames;
+            if (t > 1) t = 1;
+            let relativeX = getCarPosition(currentMotionType, t);
+            let carX = 50 + (relativeX * 380); 
+            
+            if (frameCount % 15 === 0 && frameCount <= totalFrames) dots.push(carX);
+            ctx.fillStyle = '#2563eb';
+            dots.forEach(dx => { ctx.beginPath(); ctx.arc(dx, 130, 4, 0, Math.PI * 2); ctx.fill(); });
+            
+            drawCar(carX, 150, currentMotionType);
+
+            if (frameCount < totalFrames + 30) {
+                frameCount++;
+                animFrame = requestAnimationFrame(animateLoop);
+            } else {
+                if (!hasAnswered) document.getElementById('replayBtn').disabled = false;
+            }
+        }
+
+        function getGraphYValue(mode, patternId, t) {
+            if (mode === 's') { 
+                if (patternId === 0) return t;
+                if (patternId === 1) return 1 - t;
+                if (patternId === 2) return t * t;
+                if (patternId === 3) return 2 * t - t * t;
+                if (patternId === 4) return 1 - (t * t);
+                if (patternId === 5) return (1 - t) * (1 - t);
+            } else if (mode === 'v') { 
+                if (patternId === 0) return 1;
+                if (patternId === 1) return -1;
+                if (patternId === 2) return 2 * t;
+                if (patternId === 3) return 2 - 2 * t;
+                if (patternId === 4) return -2 * t;
+                if (patternId === 5) return -2 + 2 * t;
+            } else if (mode === 'a') { 
+                if (patternId === 0) return 0;
+                if (patternId === 1) return 2;
+                if (patternId === 2) return -2;
+                if (patternId === 3) return 2 * t;
+                if (patternId === 4) return -2 * t;
+                if (patternId === 5) return -2 + 4 * t;
+            }
+            return 0;
+        }
+
+        function drawGraphShape(canvasId, mode, patternId, color = '#2563eb') {
+            const canvas = document.getElementById(canvasId);
+            const gCtx = canvas.getContext('2d');
+            gCtx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            gCtx.strokeStyle = '#64748b'; gCtx.lineWidth = 2;
+            gCtx.beginPath();
+            gCtx.moveTo(20, 10); gCtx.lineTo(20, 130); 
+            let xAxisY = (mode === 's') ? 120 : 70; 
+            gCtx.moveTo(20, xAxisY); gCtx.lineTo(130, xAxisY); 
+            gCtx.stroke();
+            
+            gCtx.fillStyle = '#475569'; gCtx.font = "bold 13px sans-serif";
+            gCtx.fillText(mode, 5, 15); gCtx.fillText("t", 125, xAxisY + 12);
+
+            if (patternId < 0) {
+                gCtx.fillStyle = '#cbd5e1'; gCtx.font = "bold 40px sans-serif"; gCtx.textAlign = "center";
+                gCtx.fillText("?", canvas.width/2 + 5, canvas.height/2 + 10);
+                gCtx.textAlign = "left"; 
+                return; 
+            }
+
+            gCtx.strokeStyle = color; 
+            gCtx.lineWidth = 4; 
+            gCtx.beginPath();
+            for (let i = 0; i <= 100; i++) {
+                let t = i / 100;
+                let val = getGraphYValue(mode, patternId, t);
+                let px = 20 + (t * 100);
+                let py = (mode === 's') ? (120 - (val * 100)) : (70 - (val * 25)); 
+                if (i === 0) gCtx.moveTo(px, py);
+                else gCtx.lineTo(px, py);
+            }
+            gCtx.stroke();
+        }
+
+        function getExplanation(motionType, mode) {
+            let motionDesc = "", focusDesc = "";
+            switch(motionType) {
+                case 0:
+                    motionDesc = "รถวิ่งไปทางขวาด้วยความเร็วคงที่";
+                    if(mode==='s') focusDesc = "การกระจัด (s) จะเพิ่มขึ้นอย่างสม่ำเสมอ กราฟจึงเป็นเส้นตรงความชันบวก";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) เป็นบวก (+) คงที่ กราฟจึงเป็นเส้นตรงแนวนอนเหนือแกนเวลา";
+                    if(mode==='a') focusDesc = "ความเร็วไม่เปลี่ยนแปลง ความเร่ง (a) จึงมีค่าเป็นศูนย์ (ทับแกนเวลา)";
+                    break;
+                case 1:
+                    motionDesc = "รถวิ่งไปทางซ้ายด้วยความเร็วคงที่";
+                    if(mode==='s') focusDesc = "ตำแหน่งจะลดลงอย่างสม่ำเสมอ กราฟจึงเป็นเส้นตรงความชันติดลบ";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) เป็นลบ (-) คงที่ กราฟจึงเป็นเส้นตรงแนวนอนใต้แกนเวลา";
+                    if(mode==='a') focusDesc = "ความเร็วไม่เปลี่ยนแปลง ความเร่ง (a) จึงมีค่าเป็นศูนย์ (ทับแกนเวลา)";
+                    break;
+                case 2:
+                    motionDesc = "รถเริ่มจากหยุดนิ่งและเร่งไปทางขวา (v และ a มีทิศเดียวกัน)";
+                    if(mode==='s') focusDesc = "ระยะทางเพิ่มขึ้นอย่างรวดเร็ว กราฟจึงเป็นเส้นโค้งพาราโบลาหงาย";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) เป็นบวกและเพิ่มขึ้น กราฟจึงเป็นเส้นตรงเฉียงขึ้น";
+                    if(mode==='a') focusDesc = "ความเร่ง (a) คงที่และมีค่าเป็นบวก (+) เส้นกราฟจะอยู่เหนือแกนเวลา";
+                    break;
+                case 3:
+                    motionDesc = "รถวิ่งไปทางขวาแล้วเบรกจนหยุด (v และ a มีทิศสวนทางกัน)";
+                    if(mode==='s') focusDesc = "ระยะทางเพิ่มขึ้นแต่ช้าลง กราฟจึงเป็นโค้งพาราโบลาคว่ำจนความชันเป็นศูนย์";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) เป็นบวกแต่กำลังลดลง กราฟจึงเฉียงลงเข้าหาศูนย์";
+                    if(mode==='a') focusDesc = "เบรกขณะไปขวา = ความเร่งมีทิศชี้ไปทางซ้าย กราฟ a จึงติดลบ (-) คงที่";
+                    break;
+                case 4:
+                    motionDesc = "รถเร่งความเร็วไปทางซ้าย (v และ a มีทิศเดียวกัน)";
+                    if(mode==='s') focusDesc = "รถเคลื่อนที่ไปทางซ้ายอย่างรวดเร็ว กราฟจึงโค้งดิ่งลง (ความชันติดลบมากขึ้น)";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) เป็นลบและมากขึ้น กราฟจึงเฉียงลงใต้แกน (ติดลบมากขึ้น)";
+                    if(mode==='a') focusDesc = "ทิศความเร่งชี้ไปทางซ้ายตามการเคลื่อนที่ กราฟ a จึงติดลบ (-) คงที่";
+                    break;
+                case 5:
+                    motionDesc = "รถวิ่งไปทางซ้ายแล้วเบรกจนหยุด (v และ a มีทิศสวนทางกัน)";
+                    if(mode==='s') focusDesc = "รถไปซ้ายแต่ช้าลง กราฟค่อยๆ ราบเรียบจนขนานแกนเวลา (ความชันเข้าใกล้ศูนย์)";
+                    if(mode==='v') focusDesc = "ความเร็ว (v) ติดลบแต่ค่อยๆ ลดลงจนหยุด กราฟจึงเฉียงขึ้นเข้าหาศูนย์";
+                    if(mode==='a') focusDesc = "เบรกขณะไปซ้าย = ความเร่งมีทิศชี้ไปทางขวา (ต้านการเคลื่อนที่) กราฟ a จึงเป็นบวก (+) คงที่!";
+                    break;
+            }
+            return `<div class='explanation-box'><b>วิเคราะห์:</b> ${motionDesc}<br><b>เหตุผล:</b> ${focusDesc}</div>`;
+        }
+
+        function startNewQuestion() {
+            if (gameOver) return;
+            hasAnswered = false;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            for (let i = 0; i < 6; i++) {
+                let card = document.getElementById(`opt${i}`);
+                card.classList.remove('correct', 'wrong');
+            }
+
+            const modes = ['s', 'v', 'a'];
+            currentGraphMode = modes[Math.floor(Math.random() * modes.length)];
+            currentMotionType = Math.floor(Math.random() * 6);
+            
+            const instrBox = document.getElementById('instructionBox');
+            if (currentGraphMode === 's') instrBox.innerHTML = "จงเลือก <b>กราฟการกระจัด-เวลา (s-t graph)</b> ที่ตรงกับการเคลื่อนที่นี้";
+            else if (currentGraphMode === 'v') instrBox.innerHTML = "จงเลือก <b>กราฟความเร็ว-เวลา (v-t graph)</b> ที่ตรงกับการเคลื่อนที่นี้";
+            else if (currentGraphMode === 'a') instrBox.innerHTML = "จงเลือก <b>กราฟความเร่ง-เวลา (a-t graph)</b> ที่ตรงกับการเคลื่อนที่นี้";
+
+            choices = [0, 1, 2, 3, 4, 5].map(patternId => {
+                let isCorrect = false;
+                if (currentGraphMode === 's' || currentGraphMode === 'v') {
+                    isCorrect = (patternId === currentMotionType);
+                } else if (currentGraphMode === 'a') {
+                    if (currentMotionType === 0 || currentMotionType === 1) isCorrect = (patternId === 0); 
+                    if (currentMotionType === 2 || currentMotionType === 5) isCorrect = (patternId === 1); 
+                    if (currentMotionType === 3 || currentMotionType === 4) isCorrect = (patternId === 2); 
+                }
+                return { patternId: patternId, isCorrect: isCorrect };
+            });
+            choices.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < 6; i++) {
+                let card = document.getElementById(`opt${i}`);
+                card.className = "option-card";
+                card.disabled = false;
+                drawGraphShape(`opt${i}Canvas`, currentGraphMode, choices[i].patternId, '#3b82f6');
+            }
+            startAnimation();
+        }
+
+        function updateRewardSystem() {
+            const stars = document.querySelectorAll('.star-item');
+            stars.forEach((star, index) => { if (index < score) star.classList.add('active'); });
+        }
+
+        function checkAnswer(idx) {
+            if (hasAnswered || gameOver || !isStudentInfoComplete()) return;
+            hasAnswered = true; total++;
+            document.getElementById('replayBtn').disabled = true;
+            if (animFrame) cancelAnimationFrame(animFrame); 
+
+            for (let i = 0; i < 6; i++) document.getElementById(`opt${i}`).disabled = true;
+
+            const feedback = document.getElementById('feedback');
+            let explanationHtml = getExplanation(currentMotionType, currentGraphMode);
+
+            if (choices[idx].isCorrect) {
+                score++;
+                feedback.className = "feedback success";
+                feedback.innerHTML = `<div class='feedback-header'>ถูกต้อง! เก่งมากครับ</div> ${explanationHtml}`;
+                document.getElementById(`opt${idx}`).classList.add('correct');
+                drawGraphShape(`opt${idx}Canvas`, currentGraphMode, choices[idx].patternId, '#10b981'); 
+            } else {
+                feedback.className = "feedback error";
+                feedback.innerHTML = `<div class='feedback-header'>ยังไม่ถูกต้อง (ดูเฉลยที่กราฟสีเขียว)</div> ${explanationHtml}`;
+                document.getElementById(`opt${idx}`).classList.add('wrong');
+                let cIdx = choices.findIndex(c => c.isCorrect);
+                document.getElementById(`opt${cIdx}`).classList.add('correct');
+                drawGraphShape(`opt${cIdx}Canvas`, currentGraphMode, choices[cIdx].patternId, '#10b981'); 
+            }
+
+            updateRewardSystem();
+            document.getElementById('score').innerText = score;
+            document.getElementById('total').innerText = total;
+            feedback.style.display = 'block';
+
+            if (score >= targetScore || total >= maxAttempts) endGame();
+            else document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        function endGame() {
+            gameOver = true;
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('studentName').disabled = true;
+            document.getElementById('studentClass').disabled = true;
+            document.getElementById('studentNo').disabled = true;
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = "feedback system-msg";
+            feedback.innerHTML = "จบเกม! กำลังส่งข้อมูลคะแนนของคุณ กรุณารอสักครู่...";
+            feedback.style.display = 'block';
+
+            const WEB_APP_URL = "ใส่_URL_WEB_APP_ที่นี่";
+
+            let formData = new URLSearchParams();
+            formData.append('name', document.getElementById('studentName').value);
+            formData.append('studentClass', document.getElementById('studentClass').value);
+            formData.append('studentNo', document.getElementById('studentNo').value);
+            formData.append('score', score);
+            formData.append('attempts', total);
+
+            fetch(WEB_APP_URL, { method: 'POST', body: formData })
+            .then(response => response.text())
+            .then(result => {
+                feedback.className = "feedback success";
+                feedback.innerHTML = `บันทึกคะแนนสำเร็จ! ทำได้ ${score} คะแนน จาก ${total} ครั้ง`;
+            })
+            .catch(error => {
+                feedback.className = "feedback error";
+                feedback.innerHTML = "เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาแจ้งครูผู้สอน";
+            });
+        }
+
+        window.onload = function() {
+            for (let i = 0; i < 6; i++) {
+                let card = document.getElementById(`opt${i}`);
+                card.querySelector('canvas').id = `opt${i}Canvas`;
+                drawGraphShape(`opt${i}Canvas`, 's', -1); 
+            }
+            drawBackground();
+            drawCar(50, 150, -1); 
+        };
+    </script>
+</body>
+</html>
